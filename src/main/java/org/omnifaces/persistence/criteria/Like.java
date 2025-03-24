@@ -12,17 +12,12 @@
  */
 package org.omnifaces.persistence.criteria;
 
-import static java.util.stream.Collectors.toSet;
 import static org.omnifaces.persistence.JPA.castAsString;
-import static org.omnifaces.persistence.JPA.isEnumeratedByOrdinal;
-import static org.omnifaces.utils.stream.Streams.stream;
 
 import java.util.Objects;
-import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
 /**
@@ -70,24 +65,13 @@ public final class Like extends Criteria<String> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Predicate build(Expression<?> path, CriteriaBuilder criteriaBuilder, ParameterBuilder parameterBuilder) {
 		Class<?> type = path.getJavaType();
 
-		if (type.isEnum() && path instanceof Path && isEnumeratedByOrdinal((Path<?>) path)) {
-			Set<?> matches = stream(type.getEnumConstants()).filter(this::applies).collect(toSet());
-			return matches.isEmpty() ? criteriaBuilder.notEqual(criteriaBuilder.literal(1), parameterBuilder.create(1)) : path.in(parameterBuilder.create(matches));
-		}
-		else if (Bool.is(type)) {
-			Expression<Boolean> pathAsBoolean = (Expression<Boolean>) path;
-			return Bool.isTruthy(getValue()) ? criteriaBuilder.isTrue(pathAsBoolean) : criteriaBuilder.isFalse(pathAsBoolean);
-		}
-		else {
-			boolean lowercaseable = !Numeric.is(type);
-			String searchValue = (startsWith() ? "" : "%") + (lowercaseable ? getValue().toLowerCase() : getValue()) + (endsWith() ? "" : "%");
-			Expression<String> pathAsString = castAsString(criteriaBuilder, path);
-			return criteriaBuilder.like(lowercaseable ? criteriaBuilder.lower(pathAsString) : pathAsString, parameterBuilder.create(searchValue));
-		}
+		boolean lowercaseable = !Numeric.is(type);
+		String searchValue = (startsWith() ? "" : "%") + (lowercaseable ? getValue().toLowerCase() : getValue()) + (endsWith() ? "" : "%");
+		Expression<String> pathAsString = castAsString(criteriaBuilder, path);
+		return criteriaBuilder.like(lowercaseable ? criteriaBuilder.lower(pathAsString) : pathAsString, parameterBuilder.create(searchValue));
 	}
 
 	@Override
