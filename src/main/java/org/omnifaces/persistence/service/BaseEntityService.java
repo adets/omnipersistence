@@ -1971,7 +1971,7 @@ public abstract class BaseEntityService<I extends Comparable<I> & Serializable, 
 		}
 
 		if (restriction != null) {
-			boolean distinct = !optionalPredicates.isEmpty() || hasFetches((From<?, ?>) pathResolver.get(null));
+			boolean distinct = hasFetches((From<?, ?>) pathResolver.get(null));
 			query.distinct(distinct).where(conjunctRestrictionsIfNecessary(criteriaBuilder, query.getRestriction(), restriction));
 		}
 
